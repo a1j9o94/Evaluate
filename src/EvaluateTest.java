@@ -15,152 +15,25 @@ public class EvaluateTest{
     }
     
     private static double evaluate(String str){
-        //System.out.println(str); used for testing
         //No more operators, therefore the final number
     	if(opCount(str) == 0){
-            System.out.println(roundTo2Decimals(Double.parseDouble(str)));
             return roundTo2Decimals(Double.parseDouble(str));
         }
     	//a negative number
         if(opCount(str) == 1 && str.startsWith("-")){
-            System.out.println((-1)*roundTo2Decimals(Double.parseDouble(str.substring(1))));
             return (-1)*roundTo2Decimals(Double.parseDouble(str.substring(1)));
         }
-        /*it reduces to a negative at the front while still having other operators.
-         * Have to handle each successive operator separately.
-         * There will never be a * with a leading negative because multiplication
-         * is handled before any subtraction
-         */
         if(str.startsWith("-")){
-            if(nextOpIs(str.substring(1),"+")){
-            	//if doing addition simply move the negative to the back to subtract
-                return evaluate(str.substring(str.indexOf("+")+1) + "-" + str.substring(1,str.indexOf("+")));
-            }
-            if(nextOpIs(str.substring(1),"-")){
-                if(opCount(str) == 2){
-                	//factor out the -1
-                    return -1*(Double.parseDouble(str.substring(1,str.lastIndexOf("-")))+
-                    Double.parseDouble(str.substring(str.lastIndexOf("-")+1)));
-                }
-                else{
-                	/*this takes the negative number and adds the remaining numbers to it.
-                	 * I originally had it subtracting evaluate but that subtracts a negative
-                	 * number which is really addition.
-                	 */
-                    return Double.parseDouble(str.substring(0,str.indexOf("-",1)))+
-                    evaluate(str.substring(str.indexOf("-",1)));
-                }
-            }
+            return leadingMinus(str);
         }
         if(str.contains("(") && str.contains(")")){
-            double inParen = evaluate(getInParen(str.substring(str.indexOf("("))));
-            startIndex = str.indexOf("(");
-            if(inParen >= 0){
-                return evaluate(str.substring(0,startIndex)+inParen+
-                str.substring(str.indexOf(getInParen(str.substring(str.indexOf("("))))+getInParen(str.substring(str.indexOf("("))).length()+1));
-            }
-            else{
-                if(lastOp(str.substring(0,str.indexOf("("))).equals("-")){
-                    return evaluate(str.substring(0,startIndex-1)+"+"+inParen*(-1)+
-                    str.substring(str.indexOf(getInParen(str.substring(str.indexOf("("))))+getInParen(str.substring(str.indexOf("("))).length()+1));
-                }
-                else if(lastOp(str.substring(0,str.indexOf("("))).equals("+")){
-                    return evaluate(str.substring(0,startIndex-1)+inParen+
-                    str.substring(str.indexOf(getInParen(str.substring(str.indexOf("("))))+getInParen(str.substring(str.indexOf("("))).length()+1));
-                }
-                else if(lastOp(str.substring(0,str.indexOf("("))).equals("*")){
-                    if(!lastOp(str.substring(0,str.indexOf("*"))).equals("")){
-                        return evaluate(str.substring(0,str.lastIndexOf(lastOp(str.substring(0,str.indexOf("*"))),str.indexOf("*"))+1)+"("+
-                        (Double.parseDouble(str.substring(str.lastIndexOf(lastOp(str.substring(0,str.indexOf("*"))),str.indexOf("*"))+1,
-                        startIndex))*inParen)+")"+str.substring(str.indexOf(getInParen(str.substring(str.indexOf("("))))+
-                        getInParen(str.substring(str.indexOf("("))).length()+1));
-                    }
-                    else{
-                        return evaluate("("+Double.parseDouble(str.substring(0,str.indexOf("*")))*inParen+")"
-                        +str.substring(str.indexOf(getInParen(str.substring(str.indexOf("("))))+
-                        getInParen(str.substring(str.indexOf("("))).length()+1));
-                    }
-                }
-                else if(lastOp(str.substring(0,str.indexOf("("))).equals("/")){
-                    if(!lastOp(str.substring(0,str.indexOf("/"))).equals("")){
-                        return evaluate(str.substring(0,str.lastIndexOf(lastOp(str.substring(0,str.indexOf("/"))),str.indexOf("/"))+1)+"("+
-                        (Double.parseDouble(str.substring(str.lastIndexOf(lastOp(str.substring(0,str.indexOf("/"))),str.indexOf("/"))+1,
-                        startIndex))/inParen)+")"+str.substring(str.indexOf(getInParen(str.substring(str.indexOf("("))))+
-                        getInParen(str.substring(str.indexOf("("))).length()+1));
-                    }
-                    else{
-                        return evaluate("("+Double.parseDouble(str.substring(0,str.indexOf("/")))/inParen+")"
-                        +str.substring(str.indexOf(getInParen(str.substring(str.indexOf("("))))+
-                        getInParen(str.substring(str.indexOf("("))).length()+1));
-                    }                
-                }
-                else{
-                    return evaluate(inParen+str.substring(str.indexOf(getInParen(str.substring(str.indexOf("("))))+
-                    getInParen(str.substring(str.indexOf("("))).length()+1));
-                }
-            }
+            return containParen(str);
         }
         if((str.indexOf("*") < str.indexOf("/") && str.indexOf("*") > 0) || (str.indexOf("*") > 0 && str.indexOf("/") == -1)){
-        	//if the current * is at the first operator in the string
-            if(lastOp(str.substring(0,str.indexOf("*"))).equals("")){
-                //System.out.println("m1"); used for testing
-            	//if there are more operators to work with
-                if(opCount(str)!=1){
-                    return evaluate((Double.parseDouble(str.substring(0,str.indexOf("*")))*
-                                    Double.parseDouble(str.substring(str.indexOf("*")+1,str.indexOf(nextOp(str.substring(str.indexOf("*")+1)),str.indexOf("*")+
-                                    1))))+ str.substring(str.indexOf(nextOp(str.substring(str.indexOf("*")+1)),str.indexOf("*")+1)));
-                }
-                //if the current operator is the only one
-                else{
-                    return evaluate(Double.parseDouble(str.substring(0,str.indexOf("*")))*Double.parseDouble(str.substring(str.indexOf("*")+1)) + "");
-                }
-            }
-            //if it is NOT the last operator
-            else if(!nextOp(str.substring(str.indexOf("*")+1)).equals("")){
-                //System.out.println("m2"); used for testing
-                return evaluate(str.substring(0,str.lastIndexOf(lastOp(str.substring(0,str.indexOf("*"))),str.indexOf("*"))+1)+
-                                    (Double.parseDouble(str.substring(str.lastIndexOf(lastOp(str.substring(0,str.indexOf("*")-1)),str.indexOf("*"))+
-                                    1,str.indexOf("*")))* Double.parseDouble(str.substring(str.indexOf("*")+1,
-                                    str.indexOf(nextOp(str.substring(str.indexOf("*")+1)),str.indexOf("*")+1))))+
-                                    str.substring(str.indexOf(nextOp(str.substring(str.indexOf("*")+1)),str.indexOf("*")+1)));
-            }
-            else{
-                //System.out.println("m3"); used for testing
-                return evaluate(str.substring(0,str.lastIndexOf(lastOp(str.substring(0,str.indexOf("*"))))+1)+
-                                    (Double.parseDouble(str.substring(str.lastIndexOf(lastOp(str.substring(0,str.indexOf("*")-1)))+1,str.indexOf("*")))*
-                                    Double.parseDouble(str.substring(str.indexOf("*")+1))));
-            }
+        	return multiplication(str);
         }
         if((str.indexOf("/") < str.indexOf("*") && str.indexOf("/") > 0) || (str.indexOf("/") > 0 && str.indexOf("*") == -1)){
-        	//if the current / is at the first operator in the string
-            if(lastOp(str.substring(0,str.indexOf("/"))).equals("")){
-                //System.out.println("m1"); used for testing
-            	//if there are more operators to work with
-                if(opCount(str)!=1){
-                    return evaluate((Double.parseDouble(str.substring(0,str.indexOf("/")))/
-                                    Double.parseDouble(str.substring(str.indexOf("/")+1,str.indexOf(nextOp(str.substring(str.indexOf("/")+1)),str.indexOf("/")+
-                                    1))))+ str.substring(str.indexOf(nextOp(str.substring(str.indexOf("/")+1)),str.indexOf("/")+1)));
-                }
-                //if the current operator is the only one
-                else{
-                    return evaluate(Double.parseDouble(str.substring(0,str.indexOf("/")))/Double.parseDouble(str.substring(str.indexOf("/")+1)) + "");
-                }
-            }
-            //if it is NOT the last operator
-            else if(!nextOp(str.substring(str.indexOf("/")+1)).equals("")){
-                //System.out.println("m2"); used for testing
-                return evaluate(str.substring(0,str.lastIndexOf(lastOp(str.substring(0,str.indexOf("/"))),str.indexOf("/"))+1)+
-                                    (Double.parseDouble(str.substring(str.lastIndexOf(lastOp(str.substring(0,str.indexOf("/")-1)),str.indexOf("/"))+
-                                    1,str.indexOf("/")))/ Double.parseDouble(str.substring(str.indexOf("/")+1,
-                                    str.indexOf(nextOp(str.substring(str.indexOf("/")+1)),str.indexOf("/")+1))))+
-                                    str.substring(str.indexOf(nextOp(str.substring(str.indexOf("/")+1)),str.indexOf("/")+1)));
-            }
-            else{
-                //System.out.println("m3"); used for testing
-                return evaluate(str.substring(0,str.lastIndexOf(lastOp(str.substring(0,str.indexOf("/"))))+1)+
-                                    (Double.parseDouble(str.substring(str.lastIndexOf(lastOp(str.substring(0,str.indexOf("/")-1)))+1,str.indexOf("/")))/
-                                    Double.parseDouble(str.substring(str.indexOf("/")+1))));
-            }
+        	return divison(str);
         }
         /*
          * The logic for the + and - if statements test to see which one should be
@@ -171,63 +44,203 @@ public class EvaluateTest{
          * I am not completely sure which parts are not needed.
          */
         if((str.indexOf("+") < str.indexOf("-") && str.indexOf("+") > 0) || (str.indexOf("+") > 0 && str.indexOf("-") == -1)){
-            if(lastOp(str.substring(0,str.indexOf("+"))).equals("")){
-                //System.out.println("add1"); used for testing
-                if(opCount(str)!=1){
-                    return evaluate((Double.parseDouble(str.substring(0,str.indexOf("+")))+
-                                    Double.parseDouble(str.substring(str.indexOf("+")+1,str.indexOf(nextOp(str.substring(str.indexOf("+")+1)),str.indexOf("+")+
-                                    1))))+ str.substring(str.indexOf(nextOp(str.substring(str.indexOf("+")+1)),str.indexOf("+")+1)));
-                }
-                else{
-                    return evaluate(Double.parseDouble(str.substring(0,str.indexOf("+")))+Double.parseDouble(str.substring(str.indexOf("+")+1)) + "");
-                }
-            }
-            else if(!nextOp(str.substring(str.indexOf("+")+1)).equals("")){
-                //System.out.println("add2"); used for testing
-                return evaluate(str.substring(0,str.lastIndexOf(lastOp(str.substring(0,str.indexOf("+"))),str.indexOf("+"))+1)+
-                                    (Double.parseDouble(str.substring(str.lastIndexOf(lastOp(str.substring(0,str.indexOf("+")-1)),str.indexOf("+"))+
-                                    1,str.indexOf("+")))+
-                                    Double.parseDouble(str.substring(str.indexOf("+")+1,str.indexOf(nextOp(str.substring(str.indexOf("+")+1)),str.indexOf("+")
-                                    +1))))+
-                                    str.substring(str.indexOf(nextOp(str.substring(str.indexOf("+")+1)),str.indexOf("+")+1)));
-            }
-            else{
-                //System.out.println("add3"); used for testing
-                return evaluate(str.substring(0,str.indexOf(lastOp(str.substring(0,str.indexOf("+"))))+1)+
-                                    (Double.parseDouble(str.substring(str.indexOf(lastOp(str.substring(0,str.indexOf("+")-1)))+1,str.indexOf("+")))+
-                                    Double.parseDouble(str.substring(str.indexOf("+")+1))));
-            }
+            return addition(str);
         }
         else if((str.indexOf("-") < str.indexOf("+") && str.indexOf("-") > 0) || (str.indexOf("-") > 0 && str.indexOf("+") == -1)){
-            if(lastOp(str.substring(0,str.indexOf("-"))).equals("")){
-                //System.out.println("sub1"); used for testing
-                if(opCount(str)!=1){
-                    return evaluate((Double.parseDouble(str.substring(0,str.indexOf("-")))-
-                                    Double.parseDouble(str.substring(str.indexOf("-")+1,str.indexOf(nextOp(str.substring(str.indexOf("-")+1)),str.indexOf("-")+
-                                    1))))+ str.substring(str.indexOf(nextOp(str.substring(str.indexOf("-")+1)),str.indexOf("-")+1)));
-                }
-                else{
-                    return evaluate(Double.parseDouble(str.substring(0,str.indexOf("-")))-Double.parseDouble(str.substring(str.indexOf("-")+1)) + "");
-                }
-            }
-            else if(!nextOp(str.substring(str.indexOf("-")+1)).equals("")){
-                //System.out.println("sub2"); used for testing
-                return evaluate(str.substring(0,str.lastIndexOf(lastOp(str.substring(0,str.indexOf("-"))),str.indexOf("-"))+1)+
-                                    (Double.parseDouble(str.substring(str.lastIndexOf(lastOp(str.substring(0,str.indexOf("-")-1)),
-                                    str.indexOf("-"))+1,str.indexOf("-")))-
-                                    Double.parseDouble(str.substring(str.indexOf("-")+1,str.indexOf(nextOp(str.substring(str.indexOf("-")+1)),
-                                    str.indexOf("-")+1))))+str.substring(str.indexOf(nextOp(str.substring(str.indexOf("-")+1)),str.indexOf("-")+1)));
-            }
-            else{
-                //System.out.println("sub3"); used for testing
-                return evaluate(str.substring(0,str.indexOf(lastOp(str.substring(0,str.indexOf("-"))))+1)+
-                                    (Double.parseDouble(str.substring(str.indexOf(lastOp(str.substring(0,str.indexOf("-")-1)))+1,str.indexOf("-")))-
-                                    Double.parseDouble(str.substring(str.indexOf("-")+1))));
-            }
+            return subtraction(str);
         }
-        //System.out.println("failed"); used for testing
         return 0;
     }
+
+	public static double subtraction(String str) throws NumberFormatException {
+		if(lastOp(str.substring(0,str.indexOf("-"))).equals("")){
+		    if(opCount(str)!=1){
+		        return evaluate((Double.parseDouble(str.substring(0,str.indexOf("-")))-
+		                        Double.parseDouble(str.substring(str.indexOf("-")+1,str.indexOf(nextOp(str.substring(str.indexOf("-")+1)),str.indexOf("-")+
+		                        1))))+ str.substring(str.indexOf(nextOp(str.substring(str.indexOf("-")+1)),str.indexOf("-")+1)));
+		    }
+		    else{
+		        return evaluate(Double.parseDouble(str.substring(0,str.indexOf("-")))-Double.parseDouble(str.substring(str.indexOf("-")+1)) + "");
+		    }
+		}
+		else if(!nextOp(str.substring(str.indexOf("-")+1)).equals("")){
+		    return evaluate(str.substring(0,str.lastIndexOf(lastOp(str.substring(0,str.indexOf("-"))),str.indexOf("-"))+1)+
+		                        (Double.parseDouble(str.substring(str.lastIndexOf(lastOp(str.substring(0,str.indexOf("-")-1)),
+		                        str.indexOf("-"))+1,str.indexOf("-")))-
+		                        Double.parseDouble(str.substring(str.indexOf("-")+1,str.indexOf(nextOp(str.substring(str.indexOf("-")+1)),
+		                        str.indexOf("-")+1))))+str.substring(str.indexOf(nextOp(str.substring(str.indexOf("-")+1)),str.indexOf("-")+1)));
+		}
+		else{
+		    return evaluate(str.substring(0,str.indexOf(lastOp(str.substring(0,str.indexOf("-"))))+1)+
+		                        (Double.parseDouble(str.substring(str.indexOf(lastOp(str.substring(0,str.indexOf("-")-1)))+1,str.indexOf("-")))-
+		                        Double.parseDouble(str.substring(str.indexOf("-")+1))));
+		}
+	}
+
+	public static double addition(String str) throws NumberFormatException {
+		if(lastOp(str.substring(0,str.indexOf("+"))).equals("")){
+		    if(opCount(str)!=1){
+		        return evaluate((Double.parseDouble(str.substring(0,str.indexOf("+")))+
+		                        Double.parseDouble(str.substring(str.indexOf("+")+1,str.indexOf(nextOp(str.substring(str.indexOf("+")+1)),str.indexOf("+")+
+		                        1))))+ str.substring(str.indexOf(nextOp(str.substring(str.indexOf("+")+1)),str.indexOf("+")+1)));
+		    }
+		    else{
+		        return evaluate(Double.parseDouble(str.substring(0,str.indexOf("+")))+Double.parseDouble(str.substring(str.indexOf("+")+1)) + "");
+		    }
+		}
+		else if(!nextOp(str.substring(str.indexOf("+")+1)).equals("")){
+		    return evaluate(str.substring(0,str.lastIndexOf(lastOp(str.substring(0,str.indexOf("+"))),str.indexOf("+"))+1)+
+		                        (Double.parseDouble(str.substring(str.lastIndexOf(lastOp(str.substring(0,str.indexOf("+")-1)),str.indexOf("+"))+
+		                        1,str.indexOf("+")))+
+		                        Double.parseDouble(str.substring(str.indexOf("+")+1,str.indexOf(nextOp(str.substring(str.indexOf("+")+1)),str.indexOf("+")
+		                        +1))))+
+		                        str.substring(str.indexOf(nextOp(str.substring(str.indexOf("+")+1)),str.indexOf("+")+1)));
+		}
+		else{
+		    return evaluate(str.substring(0,str.indexOf(lastOp(str.substring(0,str.indexOf("+"))))+1)+
+		                        (Double.parseDouble(str.substring(str.indexOf(lastOp(str.substring(0,str.indexOf("+")-1)))+1,str.indexOf("+")))+
+		                        Double.parseDouble(str.substring(str.indexOf("+")+1))));
+		}
+	}
+
+	public static double divison(String str) throws NumberFormatException {
+		//if the current / is at the first operator in the string
+		if(lastOp(str.substring(0,str.indexOf("/"))).equals("")){
+			//if there are more operators to work with
+		    if(opCount(str)!=1){
+		        return evaluate((Double.parseDouble(str.substring(0,str.indexOf("/")))/
+		                        Double.parseDouble(str.substring(str.indexOf("/")+1,str.indexOf(nextOp(str.substring(str.indexOf("/")+1)),str.indexOf("/")+
+		                        1))))+ str.substring(str.indexOf(nextOp(str.substring(str.indexOf("/")+1)),str.indexOf("/")+1)));
+		    }
+		    //if the current operator is the only one
+		    else{
+		        return evaluate(Double.parseDouble(str.substring(0,str.indexOf("/")))/Double.parseDouble(str.substring(str.indexOf("/")+1)) + "");
+		    }
+		}
+		//if it is NOT the last operator
+		else if(!nextOp(str.substring(str.indexOf("/")+1)).equals("")){
+		    return evaluate(str.substring(0,str.lastIndexOf(lastOp(str.substring(0,str.indexOf("/"))),str.indexOf("/"))+1)+
+		                        (Double.parseDouble(str.substring(str.lastIndexOf(lastOp(str.substring(0,str.indexOf("/")-1)),str.indexOf("/"))+
+		                        1,str.indexOf("/")))/ Double.parseDouble(str.substring(str.indexOf("/")+1,
+		                        str.indexOf(nextOp(str.substring(str.indexOf("/")+1)),str.indexOf("/")+1))))+
+		                        str.substring(str.indexOf(nextOp(str.substring(str.indexOf("/")+1)),str.indexOf("/")+1)));
+		}
+		else{
+		    return evaluate(str.substring(0,str.lastIndexOf(lastOp(str.substring(0,str.indexOf("/"))))+1)+
+		                        (Double.parseDouble(str.substring(str.lastIndexOf(lastOp(str.substring(0,str.indexOf("/")-1)))+1,str.indexOf("/")))/
+		                        Double.parseDouble(str.substring(str.indexOf("/")+1))));
+		}
+	}
+
+	public static double multiplication(String str)
+			throws NumberFormatException {
+		//if the current * is at the first operator in the string
+		if(lastOp(str.substring(0,str.indexOf("*"))).equals("")){
+			//if there are more operators to work with
+		    if(opCount(str)!=1){
+		        return evaluate((Double.parseDouble(str.substring(0,str.indexOf("*")))*
+		                        Double.parseDouble(str.substring(str.indexOf("*")+1,str.indexOf(nextOp(str.substring(str.indexOf("*")+1)),str.indexOf("*")+
+		                        1))))+ str.substring(str.indexOf(nextOp(str.substring(str.indexOf("*")+1)),str.indexOf("*")+1)));
+		    }
+		    //if the current operator is the only one
+		    else{
+		        return evaluate(Double.parseDouble(str.substring(0,str.indexOf("*")))*Double.parseDouble(str.substring(str.indexOf("*")+1)) + "");
+		    }
+		}
+		//if it is NOT the last operator
+		else if(!nextOp(str.substring(str.indexOf("*")+1)).equals("")){
+		    return evaluate(str.substring(0,str.lastIndexOf(lastOp(str.substring(0,str.indexOf("*"))),str.indexOf("*"))+1)+
+		                        (Double.parseDouble(str.substring(str.lastIndexOf(lastOp(str.substring(0,str.indexOf("*")-1)),str.indexOf("*"))+
+		                        1,str.indexOf("*")))* Double.parseDouble(str.substring(str.indexOf("*")+1,
+		                        str.indexOf(nextOp(str.substring(str.indexOf("*")+1)),str.indexOf("*")+1))))+
+		                        str.substring(str.indexOf(nextOp(str.substring(str.indexOf("*")+1)),str.indexOf("*")+1)));
+		}
+		else{
+		    return evaluate(str.substring(0,str.lastIndexOf(lastOp(str.substring(0,str.indexOf("*"))))+1)+
+		                        (Double.parseDouble(str.substring(str.lastIndexOf(lastOp(str.substring(0,str.indexOf("*")-1)))+1,str.indexOf("*")))*
+		                        Double.parseDouble(str.substring(str.indexOf("*")+1))));
+		}
+	}
+
+	public static double containParen(String str) throws NumberFormatException {
+		double inParen = evaluate(getInParen(str.substring(str.indexOf("("))));
+		startIndex = str.indexOf("(");
+		if(inParen >= 0){
+		    return evaluate(str.substring(0,startIndex)+inParen+
+		    str.substring(str.indexOf(getInParen(str.substring(str.indexOf("("))))+getInParen(str.substring(str.indexOf("("))).length()+1));
+		}
+		else{
+		    if(lastOp(str.substring(0,str.indexOf("("))).equals("-")){
+		        return evaluate(str.substring(0,startIndex-1)+"+"+inParen*(-1)+
+		        str.substring(str.indexOf(getInParen(str.substring(str.indexOf("("))))+getInParen(str.substring(str.indexOf("("))).length()+1));
+		    }
+		    else if(lastOp(str.substring(0,str.indexOf("("))).equals("+")){
+		        return evaluate(str.substring(0,startIndex-1)+inParen+
+		        str.substring(str.indexOf(getInParen(str.substring(str.indexOf("("))))+getInParen(str.substring(str.indexOf("("))).length()+1));
+		    }
+		    else if(lastOp(str.substring(0,str.indexOf("("))).equals("*")){
+		        if(!lastOp(str.substring(0,str.indexOf("*"))).equals("")){
+		            return evaluate(str.substring(0,str.lastIndexOf(lastOp(str.substring(0,str.indexOf("*"))),str.indexOf("*"))+1)+"("+
+		            (Double.parseDouble(str.substring(str.lastIndexOf(lastOp(str.substring(0,str.indexOf("*"))),str.indexOf("*"))+1,
+		            startIndex))*inParen)+")"+str.substring(str.indexOf(getInParen(str.substring(str.indexOf("("))))+
+		            getInParen(str.substring(str.indexOf("("))).length()+1));
+		        }
+		        else{
+		            return evaluate("("+Double.parseDouble(str.substring(0,str.indexOf("*")))*inParen+")"
+		            +str.substring(str.indexOf(getInParen(str.substring(str.indexOf("("))))+
+		            getInParen(str.substring(str.indexOf("("))).length()+1));
+		        }
+		    }
+		    else if(lastOp(str.substring(0,str.indexOf("("))).equals("/")){
+		        if(!lastOp(str.substring(0,str.indexOf("/"))).equals("")){
+		            return evaluate(str.substring(0,str.lastIndexOf(lastOp(str.substring(0,str.indexOf("/"))),str.indexOf("/"))+1)+"("+
+		            (Double.parseDouble(str.substring(str.lastIndexOf(lastOp(str.substring(0,str.indexOf("/"))),str.indexOf("/"))+1,
+		            startIndex))/inParen)+")"+str.substring(str.indexOf(getInParen(str.substring(str.indexOf("("))))+
+		            getInParen(str.substring(str.indexOf("("))).length()+1));
+		        }
+		        else{
+		            return evaluate("("+Double.parseDouble(str.substring(0,str.indexOf("/")))/inParen+")"
+		            +str.substring(str.indexOf(getInParen(str.substring(str.indexOf("("))))+
+		            getInParen(str.substring(str.indexOf("("))).length()+1));
+		        }                
+		    }
+		    else{
+		        return evaluate(inParen+str.substring(str.indexOf(getInParen(str.substring(str.indexOf("("))))+
+		        getInParen(str.substring(str.indexOf("("))).length()+1));
+		    }
+		}
+	}
+
+	public static double leadingMinus(String str) throws NumberFormatException {
+        if(str.substring(1,2).equals("(")){
+            return evaluate("-1*" + str.substring(1));
+        }
+        else if(nextOpIs(str.substring(1),"+")){
+			//if doing addition simply move the negative to the back to subtract
+		    return evaluate(str.substring(str.indexOf("+")+1) + "-" + str.substring(1,str.indexOf("+")));
+		}
+		else if(nextOpIs(str.substring(1),"-")){
+		    if(opCount(str) == 2){
+		    	//factor out the -1
+		        return -1*(evaluate(str.substring(1,str.lastIndexOf("-")))+
+		        evaluate(str.substring(str.lastIndexOf("-")+1)));
+		    }
+		    else{
+		    	/*this takes the negative number and adds the remaining numbers to it.
+		    	 * I originally had it subtracting evaluate but that subtracts a negative
+		    	 * number which is really addition.
+		    	 */
+		        return evaluate(str.substring(0,str.indexOf("-",1)))+
+		        evaluate(str.substring(str.indexOf("-",1)));
+		    }
+		}
+        else if(nextOpIs(str.substring(1),"/")){
+            return evaluate(str.substring(0,str.indexOf("/")))/evaluate(str.substring(str.indexOf("/")+1));
+        }
+        else{
+            return evaluate(str.substring(0,str.indexOf("*")))*evaluate(str.substring(str.indexOf("*")+1));
+        }
+	}
     
     //counts how many operators are left
     private static int opCount(String str){
@@ -248,7 +261,6 @@ public class EvaluateTest{
             currentSub = str.substring(i,i+1);
             if(currentSub.equals("-") || currentSub.equals("+") || currentSub.equals("*") || currentSub.equals("/")){
                 if(currentSub.equals(op)){
-                    //System.out.println("nextopis match"); used for testing
                     return true;
                 }
                 else
@@ -263,7 +275,6 @@ public class EvaluateTest{
         for(int i = 0; i < str.length(); i++){
            String currentSub = str.substring(i,i+1);
             if(currentSub.equals("-") || currentSub.equals("+") || currentSub.equals("*") || currentSub.equals("/")){
-                //System.out.println("match"); used for testing
                 return currentSub;
             }
         }
@@ -275,7 +286,6 @@ public class EvaluateTest{
         String currentSub;
         for(int i = str.length(); i > 0; i--){
            currentSub = str.substring(i-1,i);
-           //System.out.println(currentSub); used for testing
             if(currentSub.equals("-") || currentSub.equals("+") || currentSub.equals("*") || currentSub.equals("/")){
                 return currentSub;
             }
