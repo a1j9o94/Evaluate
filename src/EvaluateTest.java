@@ -165,6 +165,10 @@ public class EvaluateTest{
 	public static double containParen(String str) throws NumberFormatException {
 		double inParen = evaluate(getInParen(str.substring(str.indexOf("("))));
 		startIndex = str.indexOf("(");
+        try{
+            Double.parseDouble(str.substring(startIndex-1,startIndex));
+            return evaluate(str.substring(0,startIndex)+"*"+str.substring(startIndex));
+        }catch(Exception ex){}
 		if(inParen >= 0){
 		    return evaluate(str.substring(0,startIndex)+inParen+
 		    str.substring(str.indexOf(getInParen(str.substring(str.indexOf("("))))+getInParen(str.substring(str.indexOf("("))).length()+1));
