@@ -1,17 +1,24 @@
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.text.DecimalFormat;
-import java.util.Scanner;
 
 public class EvaluateTest{
     
     public static int startIndex, closeIndex;
     
     public static void main(String args[]){
-        Scanner keyboard = new Scanner(System.in);
+        BufferedReader keyboard = new BufferedReader(new InputStreamReader(System.in));
+        String beingEvaluated = "";
         System.out.println("Input an equation to be evaluated.");
         System.out.println("You can use addition, subtraction, multiplication, division and parenthesis.");
-        String beingEvaluated = keyboard.nextLine();
+        try{
+        	beingEvaluated = keyboard.readLine();
+        }catch(IOException e){
+        	System.err.println("IO Exception");
+        	System.exit(0);
+        }
         System.out.println(evaluate(beingEvaluated));
-        keyboard.close();
     }
     
     public static double evaluate(String str){
